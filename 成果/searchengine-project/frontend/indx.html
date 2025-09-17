@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025家园工作室面试搜索引擎</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 地基 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* 大背景 */
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), 
+                              url('https://bing.img.run/1920x1080.php');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+        
+        .blur-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: -1;
+        }
+        
+        /* 大容器 */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 顶部区域 */
+        .top-bar {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            display: flex;
+            gap: 30px;
+        }
+        
+        .top-link {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .top-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* 中间内容 */
+        .content {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            padding: 0 20px;
+            transform: translateY(-50px);
+        }
+        
+        /* 时间 */
+        .time-section {
+            margin-bottom: 50px;
+            animation: fadeInDown 1s ease-out;
+        }
+        
+        .time {
+            font-size: 6.5rem;
+            font-weight: 300;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .date {
+            font-size: 1.6rem;
+            opacity: 0.85;
+            font-weight: 300;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 搜索栏 */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto 60px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 45px;
+            padding: 14px 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            animation: scaleIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .search-bar:focus-within {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .search-icon {
+            font-size: 1.5rem;
+            color: #555;
+            margin-right: 15px;
+            transition: color 0.3s;
+        }
+        
+        .search-input {
+            flex: 1;
+            border: none;
+            background: none;
+            font-size: 1.1rem;
+            padding: 8px 5px;
+            outline: none;
+            color: #333;
+            font-weight: 400;
+        }
+        
+        .search-input::placeholder {
+            color: #999;
+            font-weight: 300;
+        }
+        
+        .history-icon, .random-icon {
+            font-size: 1.3rem;
+            color: #666;
+            margin-left: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 8px;
+            border-radius: 50%;
+        }
+        
+        .history-icon:hover, .random-icon:hover {
+            color: #1a73e8;
+            background: rgba(26, 115, 232, 0.1);
+        }
+        
+        /* 搜索发现 */
+        .discover-section {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .discover-title {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .discover-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 14px;
+        }
+        
+        .discover-item {
+            display: inline-block;
+            padding: 12px 28px;
+            background: rgba(255, 255, 255, 0.13);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .discover-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 底部 */
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 登录模态框 */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .login-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px 35px;
+            position: relative;
+            transform: translateY(30px);
+            transition: transform 0.5s ease;
+        }
+        
+        .login-modal.active .login-container {
+            transform: translateY(0);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.8rem;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+            transform: rotate(90deg);
+        }
+        
+        .login-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .login-form-group {
+            margin-bottom: 25px;
+        }
+        
+        .login-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .login-input-container {
+            position: relative;
+        }
+        
+        .login-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: 1px solid #e1e5eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            outline: none;
+            color: #333;
+        }
+        
+        .login-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+        }
+        
+        .login-input.error {
+            border-color: #e74c3c;
+        }
+        
+        .captcha-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .captcha-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            background: #2980b9;
+        }
+        
+        .login-message {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .login-message.error {
+            background: #fce4e2;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+        
+        .login-message.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+        
+        /* 用户信息 */
+        .user-panel {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .user-name {
+            color: white;
+            font-weight: 500;
+        }
+        
+        /* 动画 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .time {
+                font-size: 4.5rem;
+            }
+            
+            .date {
+                font-size: 1.4rem;
+            }
+            
+            .search-bar {
+                padding: 12px 20px;
+                max-width: 90%;
+            }
+            
+            .discover-item {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+            
+            .top-bar, .user-panel {
+                right: 20px;
+                gap: 15px;
+            }
+            
+            .login-container {
+                padding: 30px 25px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .time {
+                font-size: 3.2rem;
+            }
+            
+            .date {
+                font-size: 1.2rem;
+            }
+            
+            .discover-title {
+                font-size: 1.2rem;
+            }
+            
+            .search-bar {
+                padding: 10px 15px;
+                border-radius: 35px;
+            }
+            
+            .search-icon {
+                font-size: 1.2rem;
+                margin-right: 10px;
+            }
+            
+            .history-icon, .random-icon {
+                font-size: 1.1rem;
+                margin-left: 10px;
+                padding: 6px;
+            }
+            
+            .search-input {
+                font-size: 1rem;
+            }
+            
+            .discover-list {
+                gap: 10px;
+            }
+            
+            .discover-item {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .footer {
+                font-size: 0.8rem;
+            }
+            
+            .top-bar, .user-panel {
+                top: 20px;
+                right: 15px;
+            }
+            
+            .top-link {
+                font-size: 0.9rem;
+                padding: 6px 10px;
+            }
+            
+            .login-container {
+                width: 90%;
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景层 -->
+    <div class="background"></div>
+    <div class="blur-overlay"></div>
+    
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 顶部导航 -->
+        <div class="top-bar" id="topBar">
+            <div class="top-link" id="loginBtn">登录</div>
+            <a href="#" class="top-link">设置</a>
+            <a href="#" class="top-link">更多</a>
+        </div>
+        
+        <!-- 登录后信息面板 -->
+        <div class="user-panel" id="userPanel" style="display: none;">
+            <div class="user-avatar" id="userAvatar">J</div>
+            <div class="user-name" id="userName">家园用户</div>
+        </div>
+        
+        <!-- 主要内容 -->
+        <div class="content">
+            <!-- 时间区域 -->
+            <div class="time-section">
+                <div class="time" id="time">00:00</div>
+                <div class="date" id="date">2023年1月1日</div>
+            </div>
+            
+            <!-- 搜索栏 -->
+            <div class="search-bar">
+                <i class="fa-solid fa-search search-icon" id="searchIcon"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="学长学姐们我还有机会吗qwq">
+                <i class="fa-solid fa-history history-icon" id="historyIcon"></i>
+                <i class="fa-solid fa-random random-icon" id="randomIcon"></i>
+            </div>
+            
+            <!-- 搜索发现区域 -->
+            <div class="discover-section">
+                <div class="discover-title">搜索发现</div>
+                <div class="discover-list" id="discoverList">
+                    <a href="https://www.baidu.com/s?wd=百度一下" class="discover-item">百度一下</a>
+                    <a href="https://www.ncu.edu.cn" class="discover-item">南昌大学</a>
+                    <a href="https://Github.com/NCUSCC" class="discover-item">超算</a>
+                    <a href="https://home.ncu.edu.cn" class="discover-item">家园工作室</a>
+                    <a href="https://m.baidu.com/video/page?pd=video_page&nid=12906485951668249918&sign=5128722999228953640&word=%E9%B8%A1%E4%BD%A0%E5%A4%AA%E7%BE%8E&oword=%E9%B8%A1%E4%BD%A0%E5%A4%AA%E7%BE%8E&atn=index&frsrcid=51553&ext=%7B%22jsy%22%3A1%7D&top=%7B%22sfhs%22%3A1%2C%22_hold%22%3A2%7D&fr0=A&fr1=A&ms=1&lid=6044870377992117604&referlid=6044870377992117604&frorder=5&_t=1758107152329" class="discover-item">小家园传声机</a>
+                    <a href="https://www.google.com" class="discover-item">Google</a>
+                    <a href="https://www.bing.com" class="discover-item">Bing</a>
+                    <a href="https://www.zhihu.com" class="discover-item">知乎</a>
+                    <a href="https://www.github.com" class="discover-item">GitHub</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部信息 -->
+        <div class="footer">
+            © 想进研发--2025版
+        </div>
+        
+        <!-- 登录模态框 -->
+        <div class="login-modal" id="loginModal">
+            <div class="login-container">
+                <i class="fas fa-times close-modal" id="closeModal"></i>
+                <h2 class="login-title">验证码登录</h2>
+                
+                <div class="login-form-group">
+                    <label class="login-label" for="loginPhone">手机号码</label>
+                    <div class="login-input-container">
+                        <i class="fas fa-phone login-icon"></i>
+                        <input type="tel" id="loginPhone" class="login-input" placeholder="请输入11位手机号码" maxlength="11">
+                    </div>
+                </div>
+                
+                <div class="login-form-group">
+                    <label class="login-label" for="loginCaptcha">短信验证码</label>
+                    <div class="login-input-container">
+                        <i class="fas fa-key login-icon"></i>
+                        <input type="text" id="loginCaptcha" class="login-input" placeholder="请输入6位验证码" maxlength="6">
+                        <button class="captcha-btn" id="captchaBtn">获取验证码</button>
+                    </div>
+                </div>
+                
+                <div class="login-message" id="loginMessage"></div>
+                
+                <button class="login-btn" id="loginSubmit">登录</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const timeElement = document.getElementById('time');
+        const dateElement = document.getElementById('date');
+        const searchInput = document.getElementById('searchInput');
+        const searchIcon = document.getElementById('searchIcon');
+        const historyIcon = document.getElementById('historyIcon');
+        const randomIcon = document.getElementById('randomIcon');
+        const discoverList = document.getElementById('discoverList');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginModal = document.getElementById('loginModal');
+        const closeModal = document.getElementById('closeModal');
+        const captchaBtn = document.getElementById('captchaBtn');
+        const loginSubmit = document.getElementById('loginSubmit');
+        const loginPhone = document.getElementById('loginPhone');
+        const loginCaptcha = document.getElementById('loginCaptcha');
+        const loginMessage = document.getElementById('loginMessage');
+        const topBar = document.getElementById('topBar');
+        const userPanel = document.getElementById('userPanel');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        
+        // 预设随机词语
+        const randomWords = [
+            "南大家园", "NUSCC", "家园工作室", "小家园传声机",
+            "南昌大学官网", "家园论坛", "想进家园qwq", "2025家园招新",
+            "学生工作室", "技术社区", "开发者平台", "校园资源导航"
+        ];
+        
+        // 历史搜索记录
+        let searchHistory = [];
+        
+        // 验证码倒计时变量
+        let captchaTimer = null;
+        let countdown = 60;
+        
+        // 时间更新
+        function updateTime() {
+            const now = new Date();
+            
+            // 格式化时间（时:分:秒）
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            // 格式化日期（年月日）
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            
+            // 星期
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekday = weekdays[now.getDay()];
+            
+            // 更新时间显示
+            timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+            dateElement.textContent = `${year}年${month}月${date}日 星期${weekday}`;
+        }
+        
+        // 每秒钟更新时间
+        setInterval(updateTime, 1000);
+        // 初始加载时更新
+        updateTime();
+        
+        // 搜索
+        function handleSearch() {
+            const keyword = searchInput.value.trim();
+            
+            if (keyword === '') {
+                // 输入为空时显示提示动画
+                searchInput.placeholder = "听不到捏，大点声呗";
+                searchInput.classList.add('shake-animation');
+                setTimeout(() => {
+                    searchInput.classList.remove('shake-animation');
+                    searchInput.placeholder = "学长学姐们看我还有机会吗qwq";
+                }, 500);
+                return;
+            }
+            
+            // 保存搜索历史
+            if (!searchHistory.includes(keyword)) {
+                searchHistory.push(keyword);
+                // 只保留最近5条历史记录
+                if (searchHistory.length > 5) {
+                    searchHistory.shift();
+                }
+            }
+            
+            // 模拟搜索
+            alert(`正在搜索: ${keyword}\n\n搜索时间高达两天半，可我没有高达，得用两年半`);
+            
+            // 清空输入框
+            searchInput.value = '';
+        }
+        
+        // 绑定搜索事件
+        searchIcon.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+        
+        // 3. 历史记录功能
+        historyIcon.addEventListener('click', () => {
+            if (searchHistory.length === 0) {
+                alert('暂无历史搜索记录');
+                return;
+            }
+            
+            // 显示历史记录
+            const randomIndex = Math.floor(Math.random() * searchHistory.length);
+            searchInput.value = searchHistory[randomIndex];
+            searchInput.focus();
+            
+            // 显示历史记录提示
+            const tooltip = document.createElement('div');
+            tooltip.textContent = '已显示历史记录';
+            tooltip.style.position = 'absolute';
+            tooltip.style.backgroundColor = 'rgba(0,0,0,0.7)';
+            tooltip.style.color = '#fff';
+            tooltip.style.padding = '8px 15px';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.fontSize = '14px';
+            tooltip.style.top = historyIcon.offsetTop - 40 + 'px';
+            tooltip.style.left = historyIcon.offsetLeft - 20 + 'px';
+            tooltip.style.zIndex = '1000';
+            tooltip.style.animation = 'fadeInOut 2s forwards';
+            
+            document.body.appendChild(tooltip);
+            
+            setTimeout(() => {
+                document.body.removeChild(tooltip);
+            }, 2000);
+        });
+        
+        // 4.随机词语功能
+        randomIcon.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * randomWords.length);
+            searchInput.value = randomWords[randomIndex];
+            searchInput.focus();
+            
+            // 显示随机提示
+            const tooltip = document.createElement('div');
+            tooltip.textContent = '已显示随机推荐';
+            tooltip.style.position = 'absolute';
+            tooltip.style.backgroundColor = 'rgba(0,0,0,0.7)';
+            tooltip.style.color = '#fff';
+            tooltip.style.padding = '8px 15px';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.fontSize = '14px';
+            tooltip.style.top = randomIcon.offsetTop - 40 + 'px';
+            tooltip.style.left = randomIcon.offsetLeft - 30 + 'px';
+            tooltip.style.zIndex = '1000';
+            tooltip.style.animation = 'fadeInOut 2s forwards';
+            
+            document.body.appendChild(tooltip);
+            
+            setTimeout(() => {
+                document.body.removeChild(tooltip);
+            }, 2000);
+        });
+        
+        // 登录模态框功能
+        loginBtn.addEventListener('click', () => {
+            loginModal.classList.add('active');
+            loginPhone.focus();
+        });
+        
+        closeModal.addEventListener('click', () => {
+            loginModal.classList.remove('active');
+        });
+        
+        // 点击模态框外部关闭
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) {
+                loginModal.classList.remove('active');
+            }
+        });
+        
+        // 获取验证码
+        captchaBtn.addEventListener('click', async () => {
+            const phone = loginPhone.value.trim();
+            
+            // 验证手机号格式
+            if (!phone || phone.length !== 11 || !/^1[3-9]\d{9}$/.test(phone)) {
+                showLoginMessage('请输入有效的11位手机号码', 'error');
+                loginPhone.classList.add('error');
+                return;
+            }
+            
+            loginPhone.classList.remove('error');
+            
+            try {
+                // 发送验证码请求
+                const response = await fetch('http://localhost:8080/api/send-captcha', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone })
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 0) {
+                    showLoginMessage('验证码已发送，5分钟内有效', 'success');
+                    
+                    // 禁用按钮+倒计时
+                    captchaBtn.disabled = true;
+                    captchaBtn.textContent = `重新发送(${countdown})`;
+                    
+                    captchaTimer = setInterval(() => {
+                        countdown--;
+                        captchaBtn.textContent = `重新发送(${countdown})`;
+                        
+                        if (countdown <= 0) {
+                            clearInterval(captchaTimer);
+                            captchaBtn.disabled = false;
+                            captchaBtn.textContent = '获取验证码';
+                            countdown = 60;
+                        }
+                    }, 1000);
+                } else {
+                    showLoginMessage(result.msg || '验证码发送失败', 'error');
+                }
+            } catch (error) {
+                showLoginMessage('网络错误，请稍后重试', 'error');
+                console.error('发送验证码失败:', error);
+            }
+        });
+        
+        // 登录
+        loginSubmit.addEventListener('click', async () => {
+            const phone = loginPhone.value.trim();
+            const code = loginCaptcha.value.trim();
+            
+            // 验证输入
+            if (!phone || phone.length !== 11 || !/^1[3-9]\d{9}$/.test(phone)) {
+                showLoginMessage('请输入有效的11位手机号码', 'error');
+                loginPhone.classList.add('error');
+                return;
+            }
+            
+            if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+                showLoginMessage('请输入6位数字验证码', 'error');
+                loginCaptcha.classList.add('error');
+                return;
+            }
+            
+            // 清除错误状态
+            loginPhone.classList.remove('error');
+            loginCaptcha.classList.remove('error');
+            
+            // 登录请求
+            loginSubmit.textContent = '登录中...';
+            loginSubmit.disabled = true;
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/verify-captcha', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, code })
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 0) {
+                    showLoginMessage('登录成功！登上了就让我进家园好不好^w^', 'success');
+                    
+                    setTimeout(() => {
+                        // 关闭模态框
+                        loginModal.classList.remove('active');
+                        
+                        // 更新用户界面
+                        topBar.style.display = 'none';
+                        userPanel.style.display = 'flex';
+                        
+                        // 使用手机号后4位作为用户名
+                        const username = phone.slice(7);
+                        userName.textContent = `用户${username}`;
+                        userAvatar.textContent = username.charAt(0);
+                        
+                        // 重置表单
+                        loginSubmit.textContent = '登录';
+                        loginSubmit.disabled = false;
+                        loginPhone.value = '';
+                        loginCaptcha.value = '';
+                        loginMessage.style.display = 'none';
+                        
+                        // 清除验证码倒计时
+                        if (captchaTimer) {
+                            clearInterval(captchaTimer);
+                            captchaBtn.disabled = false;
+                            captchaBtn.textContent = '获取验证码';
+                            countdown = 60;
+                        }
+                    }, 1500);
+                } else {
+                    showLoginMessage(result.msg || '验证码错误', 'error');
+                    loginSubmit.textContent = '登录';
+                    loginSubmit.disabled = false;
+                }
+            } catch (error) {
+                showLoginMessage('网络错误，请稍后重试', 'error');
+                loginSubmit.textContent = '登录';
+                loginSubmit.disabled = false;
+                console.error('登录失败:', error);
+            }
+        });
+        
+        // 显示登录消息
+        function showLoginMessage(text, type) {
+            loginMessage.textContent = text;
+            loginMessage.className = 'login-message';
+            
+            if (type === 'error') {
+                loginMessage.classList.add('error');
+            } else if (type === 'success') {
+                loginMessage.classList.add('success');
+            }
+        }
+        
+        // 添加抖动动画
+        const style = document.createElement('style');
+        style.textContent = `
+            .shake-animation {
+                animation: shake 0.5s;
+            }
+            
+            @keyframes shake {
+                0% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                50% { transform: translateX(10px); }
+                75% { transform: translateX(-10px); }
+                100% { transform: translateX(0); }
+            }
+            
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(10px); }
+                20% { opacity: 1; transform: translateY(0); }
+                80% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 悬停效果增强
+        document.querySelectorAll('.discover-item').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.style.transform = 'scale(1.05)';
+            });
+            
+            item.addEventListener('mouseleave', () => {
+                item.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
